@@ -1,10 +1,12 @@
 #include "Player.hpp"
-#include "Game.hpp"
+#include "../game_logic/Game.hpp"
 #include "Status.hpp"
+#include "../lib/magic_enum.hpp"
+
 #include <stdexcept>
 using namespace std;
 using coup::Status;
-
+using namespace magic_enum;
 
 
 
@@ -54,9 +56,10 @@ namespace coup {
 
     void Player::initializeStatusMap(){
 
-        for (Status s : getAllStatuses()) {
+        for (Status s : magic_enum::enum_values<Status>()) {
             statusMap[s] = false;
         }
+        
     }
 
     void Player::setStatus(Status s, bool value) {
@@ -73,36 +76,61 @@ namespace coup {
         return statusMap.at(s);
     }
 
+    void Player::checkGameIsActive() const {
+        if (!game->isStarted() || game->isOver()) {
+            throw std::runtime_error("The game is not active.");
+        }
+    }
+
+    void Player::checkPlayerTurn() const {
+        if (!game->isPlayerTurn(this)) {
+            throw std::runtime_error("It's not your turn to play.");
+        }
+    }    
+    
     void Player::gather() {
+        checkGameIsActive();
+        checkPlayerTurn();
+
         if(isStatusActive(Status::BlockedForGather)){
             throw runtime_error("You are blocked to perform this action.");
         }
 
         receiveCoins(1);
-
+        game->logAction(name, ActionType::Gather, DeletableActionType::Gather);
         game->endTurn();
     }
 
     void Player::tax() {
+        checkGameIsActive();
+        checkPlayerTurn();
+
         if(isStatusActive(Status::BlockedForTax)){
             throw runtime_error("You are blocked to perform this action.");
         }
 
         receiveCoins(2); // Governor will override this to take 3
-
+        game->logAction(name, ActionType::Tax, DeletableActionType::Tax);
         game->endTurn();
     }
 
     void Player::bribe() {
+        checkGameIsActive();
+        checkPlayerTurn();
+
         if(!hasEnoughCoins(4)){
             throw runtime_error("You don't have enough coins to perform a bribe.");
         }
         loseCoins(4);
+        game->logAction(name, ActionType::Bribe, DeletableActionType::Bribe);
         setStatus(Status::HasExtraAction,true) ;
     }
 
     void Player::arrest(Player& toArrest) {
-        if (toArrest.isStatusActive(Status::WasArrestedLastTurn)) {
+        checkGameIsActive();
+        checkPlayerTurn();
+        
+        if (game->getLastArrested() == toArrest.getName()) {
             throw runtime_error("You cannot arrest the same player two turns in a row.");
         }
         if (!toArrest.hasEnoughCoins(1)) {
@@ -111,13 +139,16 @@ namespace coup {
 
         toArrest.loseCoins(1);
         receiveCoins(1);
-    
-        setStatus(Status::WasArrestedLastTurn,true) ;
+        game->logAction(name, ActionType::Arrest, DeletableActionType::None);
+        game->setLastArrested(toArrest.getName());
 
         game->endTurn();
     }
 
     void Player::sanction(Player& toSanction) {
+        checkGameIsActive();
+        checkPlayerTurn();
+
         if (!hasEnoughCoins(3)) {
             throw runtime_error("You don't have enough coins to perform an arrest.");
         }
@@ -125,15 +156,22 @@ namespace coup {
         toSanction.setStatus(Status::BlockedForTax,true);
 
         loseCoins(3);
+        game->logAction(name, ActionType::Sanction, DeletableActionType::None);
+
         game->endTurn();
     }
 
     void Player::coup(Player& toEliminate) {
+        checkGameIsActive();
+        checkPlayerTurn();
+
         if (!hasEnoughCoins(7)) {
             throw runtime_error("You don't have enough coins to perform a coup.");
         }
         loseCoins(7);
         toEliminate.eliminate();
+        game->logAction(name, ActionType::Coup, DeletableActionType::None);
+
 
         game->endTurn();
     }

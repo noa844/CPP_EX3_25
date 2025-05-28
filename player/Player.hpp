@@ -3,7 +3,10 @@
 #include <unordered_map>
 #include "Status.hpp"
 
-class Game;
+namespace coup {
+    class Game;
+}
+
 
 namespace coup {
 
@@ -21,7 +24,7 @@ namespace coup {
         Player(const std::string& name, Game* game);
 
         //destructor
-        virtual ~Player();
+        virtual ~Player() = default;
         
         // Coin-related methods
         void receiveCoins(int amount);     // Add coins to the player
@@ -38,6 +41,9 @@ namespace coup {
         void setStatus(Status s, bool value);
         bool isStatusActive(Status s);
         void resetStatuses(); 
+
+        void checkGameIsActive() const;
+        void checkPlayerTurn()const;
 
         // Game actions (can be overridden in subclasses)
         void gather();             // Take 1 coin from the bank
