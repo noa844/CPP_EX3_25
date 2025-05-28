@@ -26,7 +26,7 @@ namespace coup {
             throw std::runtime_error("No recent tax to block for this player.");
         }
     
-        target.loseCoins(3);
+        target.loseCoins(2);
         game->removeRecentDeletableAction(target.getName(), DeletableActionType::Tax);
     
         game->endTurn();

@@ -3,8 +3,9 @@ CXX = g++
 CXXFLAGS = -std=c++17 -Wall -g -Iplayer/roles -Itest
 
 # === Sources ===
-SRC = main.cpp Game.cpp $(wildcard player/*.cpp) $(wildcard player/roles/*.cpp)
-TESTSRC = test/test.cpp Game.cpp $(wildcard player/*.cpp) $(wildcard player/roles/*.cpp)
+SRC = main.cpp $(wildcard player/*.cpp) $(wildcard player/roles/*.cpp)
+TESTSRC = test/test.cpp $(wildcard player/*.cpp) $(wildcard player/roles/*.cpp) $(wildcard game_logic/*.cpp)
+
 
 # === Executables ===
 EXEC = coup_demo

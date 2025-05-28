@@ -8,10 +8,11 @@ namespace coup {
 
     void Game::start() {
         if (players.size() < 2) {
-            throw std::runtime_error("The game requires at least 2 players to start.");
+            throw runtime_error("The game requires at least 2 players to start.");
         }
         started = true;
-        setActionHistoryLimit(players.size());
+       
+
     }
     
     bool Game::isStarted() const {
@@ -26,17 +27,17 @@ namespace coup {
         return activeCount <= 1;
     }
 
-    const std::string& Game::getLastArrested() const {
+    const string& Game::getLastArrested() const {
         return lastArrested;
     }
     
-    void Game::setLastArrested(const std::string& name) {
+    void Game::setLastArrested(const string& name) {
         lastArrested = name;
     }    
 
     void Game::addPlayer(Player* player) {
         if (players.size() >= 6) {
-            throw std::runtime_error("Maximum number of players reached.");
+            throw runtime_error("Maximum number of players reached.");
         }
         // Ensure unique name
         for (Player* p : players) {
@@ -46,6 +47,7 @@ namespace coup {
         }
 
         players.push_back(player);
+       
     }
 
     Player& Game::currentPlayer() const {
@@ -58,9 +60,15 @@ namespace coup {
 
     void Game::nextTurn() {
         currentPlayer().resetStatuses();
+        
         do {
             currentTurnIndex = (currentTurnIndex + 1) % players.size();
         } while (!players[currentTurnIndex]->isActive());
+
+        if (currentTurnIndex == 0) {
+            ++turnCounter;
+        }
+        
 
     }
 
@@ -73,19 +81,23 @@ namespace coup {
         }
     }
 
-    void Game::setActionHistoryLimit(size_t max) {
-        actionHistoryMaxSize = max;
-        actionHistory.clear();
-    }
+   const int Game::getActionHistorySize() const{
+    return actionHistory.size();
+   }
     
-    void Game::logAction(const std::string& playerName, ActionType action, DeletableActionType type) {
-        if (actionHistory.size() >= actionHistoryMaxSize) {
-            actionHistory.pop_front();
+    void Game::logAction(const string& playerName, ActionType action, DeletableActionType type) {
+        
+        for (auto it = actionHistory.begin(); it != actionHistory.end(); ) {
+            if (it->playerName == playerName && it->turn < turnCounter) {
+                it = actionHistory.erase(it);  
+            } else {
+                ++it;
+            }
         }
-        actionHistory.push_back({playerName, action, type});
+        actionHistory.push_back({playerName, action, type,turnCounter});
     }
     
-    bool Game::hasRecentDeletableAction(const std::string& playerName, DeletableActionType type) const {
+    bool Game::hasRecentDeletableAction(const string& playerName, DeletableActionType type) const {
         for (const auto& action : actionHistory) {
             if (action.playerName == playerName && action.type == type) {
                 return true;
@@ -94,11 +106,21 @@ namespace coup {
         return false;
     }
     
-    void Game::removeRecentDeletableAction(const std::string& playerName, DeletableActionType type) {
+    void Game::removeRecentDeletableAction(const string& playerName, DeletableActionType type) {
         for (auto it = actionHistory.begin(); it != actionHistory.end(); ++it) {
             if (it->playerName == playerName && it->type == type) {
-                actionHistory.erase(it);
-                break;
+                it->type = DeletableActionType::None;
+                it->action = ActionType::None;
+            }
+        }
+    }
+
+    void Game::erasePlayerAction(const string& playerName){
+        for (auto it = actionHistory.begin(); it != actionHistory.end(); ) {
+            if (it->playerName == playerName) {
+                it = actionHistory.erase(it);  
+            } else {
+                ++it;
             }
         }
     }
@@ -122,6 +144,8 @@ namespace coup {
 
     void Game::eliminate(Player& target) {
         target.eliminate();
+        erasePlayerAction(target.getName());
+        
     }
 
 }

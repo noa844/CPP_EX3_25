@@ -17,7 +17,7 @@ namespace coup {
         game->addPlayer(this);
     }
 
-    Player::~Player() {}
+    Player::~Player() {delete game;}
 
 
     void Player::receiveCoins(int amount) {
@@ -136,7 +136,9 @@ namespace coup {
         if (!toArrest.hasEnoughCoins(1)) {
             throw runtime_error("The player does not have enough coins.");
         }
-
+        if(isStatusActive(Status::BlockedForArrest)){
+            throw runtime_error("You are blocked to perform an arrest.");
+        }
         toArrest.loseCoins(1);
         receiveCoins(1);
         game->logAction(name, ActionType::Arrest, DeletableActionType::None);
@@ -150,7 +152,7 @@ namespace coup {
         checkPlayerTurn();
 
         if (!hasEnoughCoins(3)) {
-            throw runtime_error("You don't have enough coins to perform an arrest.");
+            throw runtime_error("You don't have enough coins to perform an sanction.");
         }
         toSanction.setStatus(Status::BlockedForGather,true);
         toSanction.setStatus(Status::BlockedForTax,true);
@@ -169,7 +171,7 @@ namespace coup {
             throw runtime_error("You don't have enough coins to perform a coup.");
         }
         loseCoins(7);
-        toEliminate.eliminate();
+        game->eliminate(toEliminate);
         game->logAction(name, ActionType::Coup, DeletableActionType::None);
 
 

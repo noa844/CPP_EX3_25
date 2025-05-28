@@ -8,7 +8,8 @@ namespace coup {
         Bribe,
         Arrest,
         Sanction,
-        Coup
+        Coup,
+        None
     };
 
 }

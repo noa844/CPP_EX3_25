@@ -24,7 +24,7 @@ namespace coup {
         Player(const std::string& name, Game* game);
 
         //destructor
-        virtual ~Player() = default;
+        virtual ~Player();
         
         // Coin-related methods
         void receiveCoins(int amount);     // Add coins to the player

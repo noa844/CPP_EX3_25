@@ -15,6 +15,7 @@ namespace coup {
         std::string playerName;
         ActionType action;
         DeletableActionType type;
+        int turn;
     };
     
 
@@ -23,10 +24,12 @@ namespace coup {
 
         std::vector<Player*> players;
         size_t currentTurnIndex = 0;
+        int turnCounter;
         bool started = false;
         std::string lastArrested;
         std::deque<Action> actionHistory;
-        size_t actionHistoryMaxSize = 0;
+        std::vector<std::string> activePlayersList;
+        
         
 
       
@@ -48,11 +51,11 @@ namespace coup {
         void nextTurn();                           // Advance turn
         void endTurn();                            //advance trun if player finish all his actions 
 
-        void setActionHistoryLimit(size_t max);
+        const int getActionHistorySize() const;
         void logAction(const std::string& playerName, ActionType action, DeletableActionType type);
         bool hasRecentDeletableAction(const std::string& playerName, DeletableActionType type) const;
         void removeRecentDeletableAction(const std::string& playerName, DeletableActionType type);
-       
+        void erasePlayerAction(const std::string& playerName);
 
         std::vector<std::string> activePlayers() const;
         std::string winner() const;
