@@ -5,6 +5,7 @@
 #include "ActionType.hpp"
 #include "DeletableActionType.hpp"
 #include "../player/Player.hpp"
+#include "../player/PlayerFactory.hpp"
 
 
 
@@ -30,6 +31,7 @@ namespace coup {
         std::string lastArrested;
         std::deque<Action> actionHistory;
         std::vector<std::string> activePlayersList;
+        int playersAddedCount = 0;
         
         
 
@@ -41,6 +43,8 @@ namespace coup {
         void start();                 
         bool isStarted() const;      
         bool isOver() const; 
+        int getStartPlayerCount() const;
+        void createPlayerRandomRole(const std::string& name);
 
         const std::string& getLastArrested() const;
         void setLastArrested(const std::string& name);

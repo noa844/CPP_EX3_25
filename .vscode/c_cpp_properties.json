@@ -1,0 +1,20 @@
+{
+    "version": 4,
+    "configurations": [
+      {
+        "name": "Linux",
+        "compilerPath": "/usr/bin/g++",
+        "cStandard":   "c11",
+        "cppStandard": "c++17",
+        "includePath": [
+          "${workspaceFolder}/**",
+          "/usr/include/aarch64-linux-gnu/qt5",
+          "/usr/include/aarch64-linux-gnu/qt5/QtWidgets",
+          "/usr/include/aarch64-linux-gnu/qt5/QtCore",
+          "/usr/include/aarch64-linux-gnu/qt5/QtGui"
+        ],
+        "defines": []
+      }
+    ]
+  }
+  

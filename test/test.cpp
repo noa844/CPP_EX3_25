@@ -433,6 +433,7 @@ TEST_CASE("Player(without role) and Game functionality with game start/end check
             normal->arrest(*merchant);
             
 
+           
             CHECK(merchant->getCoinsCount() == 0);
             CHECK(normal->getCoinsCount() == 0);  // Always zero for normal
         }

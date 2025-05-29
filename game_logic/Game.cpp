@@ -2,6 +2,7 @@
 #include "../player/Status.hpp"
 #include "../player/roles/Merchant.hpp"
 #include "../lib/magic_enum.hpp"
+#include "../player/PlayerFactory.hpp"
 #include <stdexcept>
 #include <iostream>
 
@@ -32,6 +33,19 @@ namespace coup {
         return activeCount <= 1;
     }
 
+    int Game::getStartPlayerCount() const {
+        return playersAddedCount;
+    }
+
+    void Game::createPlayerRandomRole(const std::string& name) {
+        if (playersAddedCount >= 6) {
+            throw std::runtime_error("Maximum number of players reached.");
+        }
+    
+        Player* newPlayer = PlayerFactory::createPlayer(name, this); 
+    }
+    
+
     const string& Game::getLastArrested() const {
         return lastArrested;
     }
@@ -41,7 +55,7 @@ namespace coup {
     }    
 
     void Game::addPlayer(Player* player) {
-        if (players.size() >= 6) {
+        if (playersAddedCount >= 6) {
             throw runtime_error("Maximum number of players reached.");
         }
         // Ensure unique name
@@ -52,6 +66,7 @@ namespace coup {
         }
 
         players.push_back(player);
+        ++playersAddedCount;
        
     }
 
