@@ -4,6 +4,10 @@ mon jeux demarre seulmeut apres start
 
 je fait arrest a qq seulment si la derniere fois dans le jeux entier arrest na pas etait effectuer sur lui.
 
+si on fait arrest sur marchant est il a pas 2 pice il en perd que une
+
+si un joueur a etait eliminer pui recussiter on perd quand meme ses actions et revien a sa place dans le tour et avec le meme nombre de coins
+
 les actions special peuve etre jouer pas pendent ton tour mais dans mon gui cest seulment pendant ton tour
 
 cest quoi Status et comment jai fait pour quil soit modulable si le project s'agrandit

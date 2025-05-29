@@ -2,11 +2,17 @@
 #include "../game_logic/Game.hpp"
 #include "Status.hpp"
 #include "../lib/magic_enum.hpp"
-
+#include "../player/roles/Baron.hpp"
+#include "../player/roles/General.hpp"
+#include "../player/roles/Judge.hpp"
+#include "../player/roles/Merchant.hpp"
 #include <stdexcept>
+#include <iostream>
 using namespace std;
 using coup::Status;
 using namespace magic_enum;
+using std::cout;
+using std::endl;
 
 
 
@@ -52,6 +58,10 @@ namespace coup {
 
     void Player::eliminate() {
         active = false;
+    }
+
+    void Player::revive() {
+        active = true;
     }
 
     void Player::initializeStatusMap(){
@@ -106,7 +116,7 @@ namespace coup {
         checkPlayerTurn();
 
         if(isStatusActive(Status::BlockedForTax)){
-            throw runtime_error("You are blocked to perform this action.");
+            throw runtime_error("You are blocked to perform tax.");
         }
 
         receiveCoins(2); // Governor will override this to take 3
@@ -129,19 +139,45 @@ namespace coup {
     void Player::arrest(Player& toArrest) {
         checkGameIsActive();
         checkPlayerTurn();
+        std::cout << "[Arrest] " << name << " is arresting " << toArrest.getName() << "\n";
+        std::cout << "[Arrest] Target coins before: " << toArrest.getCoinsCount() << "\n";
+    
         
         if (game->getLastArrested() == toArrest.getName()) {
             throw runtime_error("You cannot arrest the same player two turns in a row.");
         }
         if (!toArrest.hasEnoughCoins(1)) {
-            throw runtime_error("The player does not have enough coins.");
+            throw runtime_error("The target does not have enough coins.");
         }
         if(isStatusActive(Status::BlockedForArrest)){
             throw runtime_error("You are blocked to perform an arrest.");
         }
-        toArrest.loseCoins(1);
-        receiveCoins(1);
-        game->logAction(name, ActionType::Arrest, DeletableActionType::None);
+
+        
+        
+        General* general = dynamic_cast<General*>(&toArrest);
+        Merchant* merchant = dynamic_cast<Merchant*>(&toArrest);
+
+        std::cout << "dynamic_cast General = " << (dynamic_cast<General*>(&toArrest) != nullptr) << std::endl;
+        std::cout << "dynamic_cast Merchant = " << (dynamic_cast<Merchant*>(&toArrest) != nullptr) << std::endl;
+
+        if (general) {
+            //nothing
+            std::cout << "[Arrest] Target is General\n";
+        } else if (merchant) {
+            std::cout << "[Arrest] Target is Merchant\n";
+            merchant->handleArrest();
+
+        } else {
+            std::cout << "[Arrest] Target is regular player\n";
+            toArrest.loseCoins(1);
+            receiveCoins(1);
+        }
+
+       
+        std::cout << "[Arrest] Target coins after: " << toArrest.getCoinsCount() << "\n";
+        std::cout << "[Arrest] Arrest finished\n";
+        game->logAction(name, ActionType::Arrest, DeletableActionType::None,toArrest.getName());
         game->setLastArrested(toArrest.getName());
 
         game->endTurn();
@@ -151,14 +187,33 @@ namespace coup {
         checkGameIsActive();
         checkPlayerTurn();
 
-        if (!hasEnoughCoins(3)) {
-            throw runtime_error("You don't have enough coins to perform an sanction.");
+        
+        bool isJudge = dynamic_cast<Judge*>(&toSanction) != nullptr;
+        bool isBaron = dynamic_cast<Baron*>(&toSanction) != nullptr;
+
+        
+        int requiredCoins = isJudge ? 4 : 3;
+        if (!hasEnoughCoins(requiredCoins)) {
+            throw runtime_error(isJudge 
+        ? "You don't have enough coins to perform a sanction on Judge." 
+        : "You don't have enough coins to perform a sanction." );
         }
-        toSanction.setStatus(Status::BlockedForGather,true);
-        toSanction.setStatus(Status::BlockedForTax,true);
+
+        
+        toSanction.setStatus(Status::BlockedForGather, true);
+        toSanction.setStatus(Status::BlockedForTax, true);
+
+        if (isBaron) {
+            toSanction.receiveCoins(1);  
+        }
+
+        if (isJudge) {
+            this->loseCoins(1);  
+        }
+
 
         loseCoins(3);
-        game->logAction(name, ActionType::Sanction, DeletableActionType::None);
+        game->logAction(name, ActionType::Sanction, DeletableActionType::None,toSanction.getName());
 
         game->endTurn();
     }
@@ -171,9 +226,9 @@ namespace coup {
             throw runtime_error("You don't have enough coins to perform a coup.");
         }
         loseCoins(7);
+        
+        game->logAction(name, ActionType::Coup, DeletableActionType::None,toEliminate.getName());
         game->eliminate(toEliminate);
-        game->logAction(name, ActionType::Coup, DeletableActionType::None);
-
 
         game->endTurn();
     }

@@ -1,8 +1,13 @@
 #include "Game.hpp"
 #include "../player/Status.hpp"
+#include "../player/roles/Merchant.hpp"
 #include "../lib/magic_enum.hpp"
 #include <stdexcept>
+#include <iostream>
+
 using namespace std;
+using std::cout;
+using std::endl;
 
 namespace coup {
 
@@ -60,16 +65,19 @@ namespace coup {
 
     void Game::nextTurn() {
         currentPlayer().resetStatuses();
-        
+
         do {
             currentTurnIndex = (currentTurnIndex + 1) % players.size();
         } while (!players[currentTurnIndex]->isActive());
 
         if (currentTurnIndex == 0) {
-            ++turnCounter;
+            ++roundCounter;
+        }
+        Player* next = players[currentTurnIndex];
+        if (Merchant* m = dynamic_cast<Merchant*>(next)) {
+            m->startTurnBonus();
         }
         
-
     }
 
     void Game::endTurn() {
@@ -81,20 +89,24 @@ namespace coup {
         }
     }
 
-   const int Game::getActionHistorySize() const{
-    return actionHistory.size();
-   }
+    const int Game::getActionHistorySize() const{
+        return actionHistory.size();
+    }
+
+    const std::deque<Action>& Game::getActionHistory() const {
+        return actionHistory;
+    }
     
-    void Game::logAction(const string& playerName, ActionType action, DeletableActionType type) {
+    void Game::logAction(const string& playerName, ActionType action, DeletableActionType type,const std::string& targetName) {
         
         for (auto it = actionHistory.begin(); it != actionHistory.end(); ) {
-            if (it->playerName == playerName && it->turn < turnCounter) {
+            if (it->playerName == playerName && it->turn < roundCounter) {
                 it = actionHistory.erase(it);  
             } else {
                 ++it;
             }
         }
-        actionHistory.push_back({playerName, action, type,turnCounter});
+        actionHistory.push_back({playerName, action, type,roundCounter,targetName});
     }
     
     bool Game::hasRecentDeletableAction(const string& playerName, DeletableActionType type) const {
@@ -124,7 +136,24 @@ namespace coup {
             }
         }
     }
+
+    bool Game::wasCoupedRecently(const std::string& name) const {
+        size_t t = roundCounter;
+        
+        for (const auto& a : actionHistory) {
+            
+            if (a.action == ActionType::Coup && a.target == name &&
+                (a.turn == t || a.turn == t - 1)) {
+                return true;
+            }
+        }
+        return false;
+    }    
     
+    size_t Game::getRoundCounter() const {
+        return roundCounter;
+    }
+
     vector<string> Game::activePlayers() const {
         vector<string> result;
         for (Player* p : players) {
@@ -146,6 +175,9 @@ namespace coup {
         target.eliminate();
         erasePlayerAction(target.getName());
         
+    }
+    void Game::revive(Player& victim){
+        victim.revive();
     }
 
 }

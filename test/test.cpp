@@ -6,6 +6,10 @@
 #include "../lib/magic_enum.hpp"
 #include "../player/roles/Governor.hpp"
 #include "../player/roles/Spy.hpp"
+#include "../player/roles/Baron.hpp"
+#include "../player/roles/General.hpp"
+#include "../player/roles/Judge.hpp"
+#include "../player/roles/Merchant.hpp"
 #include <stdexcept>
 using namespace coup;
 using coup::Game;
@@ -95,7 +99,7 @@ TEST_CASE("Player(without role) and Game functionality with game start/end check
 
     SUBCASE("BlockedForTax prevents tax") {
         alice->setStatus(Status::BlockedForTax, true);
-        CHECK_THROWS_WITH(alice->tax(), "You are blocked to perform this action.");
+        CHECK_THROWS_WITH(alice->tax(), "You are blocked to perform tax.");
     }
 
     SUBCASE("Bribe consumes 4 coins and allows extra action") {
@@ -121,7 +125,7 @@ TEST_CASE("Player(without role) and Game functionality with game start/end check
    
 
     SUBCASE("Arrest fails if target has no coins") {
-        CHECK_THROWS_WITH(alice->arrest(*bob), "The player does not have enough coins.");
+        CHECK_THROWS_WITH(alice->arrest(*bob), "The target does not have enough coins.");
     }
 
     SUBCASE("Sanction disables target's gather and tax for one turn") {
@@ -132,7 +136,7 @@ TEST_CASE("Player(without role) and Game functionality with game start/end check
         CHECK(bob->isStatusActive(Status::BlockedForTax));
         bob->bribe();
         bob->arrest(*alice);
-        CHECK_THROWS_WITH(bob->tax();, "You are blocked to perform this action.");
+        CHECK_THROWS_WITH(bob->tax();, "You are blocked to perform tax.");
         bob->receiveCoins(3);
         bob->sanction(*alice);
         game1.nextTurn();//skip Alice's turn
@@ -198,7 +202,7 @@ TEST_CASE("Player(without role) and Game functionality with game start/end check
             CHECK(game2.hasRecentDeletableAction("Bob", coup::DeletableActionType::None));
         }
     }
-    TEST_CASE("Test Governor behavior") {
+    TEST_CASE("Test Spy behavior") {
         coup::Game game3;
     
         Spy* spy = new Spy("Spy", &game3);
@@ -210,6 +214,233 @@ TEST_CASE("Player(without role) and Game functionality with game start/end check
             bob->receiveCoins(3);
             int count = spy->peekCoinsCount(*bob);
             CHECK(count == 3);
+            spy->tax();
+        }
+        SUBCASE("Spy block Bob's to perform arrest") {
+            spy->blockArrest(*bob);
+            spy->tax();
+            CHECK_THROWS_WITH(bob->arrest(*spy),"You are blocked to perform an arrest.");
+            
+            bob->tax();
+            game3.nextTurn();//skip spy's turn
+            bob->receiveCoins(5);
+            bob->arrest(*spy);//now bob can arrest spy
         }
     }
+        TEST_CASE("Test Baron behavior") {
+            coup::Game game4;
+        
+            Baron* baron = new Baron("Baron", &game4);
+            Player* bob = new Player("Bob", &game4);
+        
+            game4.start();
+        
+            SUBCASE("Baron invest") {
+               
+               CHECK_THROWS_WITH(baron->invest();,"Not enough coins to invest.");
+               baron->receiveCoins(3);
+               baron->invest();
+               CHECK(baron->getCoinsCount()==6);
+
+            }
+            SUBCASE("Baron sanctioned get 1 coin") {
+                baron->tax();
+                bob->receiveCoins(3);
+                bob->sanction(*baron);
+                CHECK_THROWS_WITH(baron->tax(),"You are blocked to perform tax.");
+                CHECK(baron->getCoinsCount()==3);
+                game4.nextTurn();//skip baron's turn
+                game4.nextTurn();//skip bob's turn
+                baron->gather();
+                CHECK(baron->getCoinsCount()==4);
+            }
+    }
+
+
+
+    TEST_CASE("Test General behavior") {
+        Game game5;
+        
+        Player* alice = new Player("Alice", &game5);
+        Player* bob = new Player("Bob", &game5);
+        General* general = new General("General", &game5);
+
+        game5.start();
+
+        SUBCASE("General blocks a recent coup"){
+            // Setup: Alice has 7 coins to perform a coup
+            alice->receiveCoins(7);
+            alice->coup(*bob);
+            CHECK_FALSE(bob->isActive());
+
+            // General gets 5 coins to be able to block the coup
+            general->receiveCoins(5);
+            general->blockCoup(*bob);
+            CHECK(bob->isActive());       // Bob is revived
+            CHECK(general->getCoinsCount() == 0);  // General paid 5
+            CHECK(alice->getCoinsCount() == 0);  // alice lose 7
+            general->tax();
+
+            //check if turns order is same
+            CHECK(game5.isPlayerTurn(alice));
+            game5.nextTurn();
+            CHECK(game5.isPlayerTurn(bob));
+            game5.nextTurn();
+            CHECK(game5.isPlayerTurn(general));
+            
+
+        }
+        SUBCASE("General blocks a recent coup not immediately"){
+            Player* clara = new Player("Clara", &game5);
+            //round 1
+            game5.nextTurn();//skip alice
+            game5.nextTurn();//skip bob
+            game5.nextTurn();//skip general
+            clara->receiveCoins(7);
+            clara->coup(*alice);
+            CHECK_FALSE(alice->isActive());
+            //round 2
+            game5.nextTurn();//skip bob
+            // General gets 5 coins to be able to block the coup
+            general->receiveCoins(5);
+            general->blockCoup(*alice);
+            CHECK(alice->isActive());
+            game5.nextTurn();//skip general
+            game5.nextTurn();//skip clara
+            //round 3
+            CHECK(game5.isPlayerTurn(alice));
+
+        }
+
+        SUBCASE("General fails to block old coup") {
+           //round 1
+            alice->receiveCoins(7);
+            alice->coup(*bob);
+            CHECK_FALSE(bob->isActive());
+
+            game5.nextTurn(); // General didn't block, now it's new round
+            //round 2
+            alice->tax(); 
+            general->receiveCoins(5);
+            CHECK_THROWS_WITH(general->blockCoup(*bob), "No recent coup on this player to block.");
+        }
+        SUBCASE("General arrested get his coin back") {
+            general->receiveCoins(1);
+            alice->arrest(*general);
+            CHECK(general->getCoinsCount()==1);
+            CHECK(alice->getCoinsCount()==0);
+        }
+    }
+
+    TEST_CASE("Test Judge behavior") {
+        Game game6;
+        Player* actor = new Player("Actor", &game6);
+        Player* normal = new Player("Normal", &game6);
+        Baron* baron = new Baron("Baron", &game6);
+        Judge* judge = new Judge("Judge", &game6);
     
+        game6.start();
+    
+        SUBCASE("Sanction baron gives him 1 coin") {
+            actor->receiveCoins(3);
+            int initial = baron->getCoinsCount();
+            actor->sanction(*baron);
+            CHECK(baron->getCoinsCount() == initial + 1);
+            CHECK(baron->isStatusActive(Status::BlockedForTax));
+            CHECK(baron->isStatusActive(Status::BlockedForGather));
+        }
+    
+        SUBCASE("Sanction judge costs 4 coins") {
+            actor->receiveCoins(4);
+            int before = actor->getCoinsCount();
+            actor->sanction(*judge);
+            CHECK(judge->isStatusActive(Status::BlockedForTax));
+            CHECK(judge->isStatusActive(Status::BlockedForGather));
+            CHECK(actor->getCoinsCount() == before - 4);
+        }
+    
+        SUBCASE("Fail if not enough coins for judge") {
+            actor->receiveCoins(3);
+            CHECK_THROWS_WITH(actor->sanction(*judge), "You don't have enough coins to perform a sanction on Judge.");
+        }
+    
+        SUBCASE("Fail if not enough coins for regular sanction") {
+            CHECK_THROWS_WITH(actor->sanction(*normal), "You don't have enough coins to perform a sanction.");
+        }
+
+        SUBCASE("Judge delete bribe") {
+            actor->receiveCoins(4);
+            actor->bribe();
+            CHECK(actor->isStatusActive(Status::HasExtraAction));
+            judge->deleteBribe(*actor);
+            CHECK_FALSE(actor->isStatusActive(Status::HasExtraAction));
+        }
+        SUBCASE("Judge delete bribe with no bribe to delete") {
+            actor->receiveCoins(4);
+            actor->tax();
+            CHECK_THROWS_WITH(judge->deleteBribe(*actor),"No recent bribe to block for this player.");  
+        }
+        SUBCASE("Judge delete bribe to late") {
+            actor->receiveCoins(4);
+            actor->bribe();
+            actor->tax();
+            actor->tax();
+            CHECK_THROWS_WITH(judge->deleteBribe(*actor),"Cannot cancel bribe: player already used bonus action.");  
+        }
+    }
+   
+    TEST_CASE("Test Merchant behavior") {
+        Game game6;
+
+        Player* normal = new Player("Normal", &game6);
+        Merchant* merchant = new Merchant("Merchant", &game6);
+
+
+        game6.start();
+
+        SUBCASE("Merchant gets 1 extra coin at start of turn if has >= 3 coins") {
+            merchant->receiveCoins(3);
+            CHECK(merchant->getCoinsCount() == 3);
+
+            game6.nextTurn();  // skip normal’s turn
+            CHECK(game6.isPlayerTurn(merchant));
+            CHECK(merchant->getCoinsCount() == 4);  // Received bonus
+        }
+
+        SUBCASE("Merchant does not get extra coin if has < 3 coins") {
+            merchant->receiveCoins(2);
+            CHECK(merchant->getCoinsCount() == 2);
+
+            game6.nextTurn();  // Go to Merchant’s turn
+            CHECK(game6.isPlayerTurn(merchant));
+            CHECK(merchant->getCoinsCount() == 2);  // No bonus
+        }
+
+        SUBCASE("Merchant loses 2 coins to bank when arrested") {
+            merchant->receiveCoins(2);
+            CHECK(merchant->getCoinsCount() == 2);
+
+            // simulate arrest from normal player
+            normal->arrest(*merchant);
+
+            CHECK(merchant->getCoinsCount() == 0);  // Lost 2
+            CHECK(normal->getCoinsCount() == 0);    // Did NOT gain anything
+        }
+
+        SUBCASE("Merchant loses only 1 coin if has 1") {
+
+            merchant->receiveCoins(1);
+            normal->arrest(*merchant);
+            
+
+            CHECK(merchant->getCoinsCount() == 0);
+            CHECK(normal->getCoinsCount() == 0);  // Always zero for normal
+        }
+
+        SUBCASE("Merchant loses 0 if has 0") {
+            CHECK_THROWS_WITH(normal->arrest(*merchant);,"The target does not have enough coins.");
+            CHECK(normal->getCoinsCount() == 0);
+        }
+    }
+
+            

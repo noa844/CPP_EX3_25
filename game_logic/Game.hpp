@@ -15,7 +15,8 @@ namespace coup {
         std::string playerName;
         ActionType action;
         DeletableActionType type;
-        int turn;
+        size_t turn;
+        std::string target = "";
     };
     
 
@@ -24,7 +25,7 @@ namespace coup {
 
         std::vector<Player*> players;
         size_t currentTurnIndex = 0;
-        int turnCounter;
+        size_t roundCounter = 0;
         bool started = false;
         std::string lastArrested;
         std::deque<Action> actionHistory;
@@ -52,10 +53,14 @@ namespace coup {
         void endTurn();                            //advance trun if player finish all his actions 
 
         const int getActionHistorySize() const;
-        void logAction(const std::string& playerName, ActionType action, DeletableActionType type);
+        const std::deque<Action>& getActionHistory() const;
+        void logAction(const std::string& playerName, ActionType action, DeletableActionType type,const std::string& targetName = "");
         bool hasRecentDeletableAction(const std::string& playerName, DeletableActionType type) const;
         void removeRecentDeletableAction(const std::string& playerName, DeletableActionType type);
         void erasePlayerAction(const std::string& playerName);
+
+        bool wasCoupedRecently(const std::string& name) const;
+        size_t getRoundCounter() const;
 
         std::vector<std::string> activePlayers() const;
         std::string winner() const;
@@ -63,6 +68,7 @@ namespace coup {
 
         // Optional: remove player after coup
         void eliminate(Player& target);
+        void revive(Player& victim);
     };
 
 }

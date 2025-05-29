@@ -36,6 +36,7 @@ namespace coup {
 
         bool isActive() const;             // Check if the player is still active
         void eliminate();                  // Mark the player as eliminated
+        void revive();
         
         void initializeStatusMap();
         void setStatus(Status s, bool value);
