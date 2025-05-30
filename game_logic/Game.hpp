@@ -39,12 +39,20 @@ namespace coup {
     public:
 
         Game() {};
+        ~Game();
+
+        Game(const Game& other) = delete;
+        Game& operator=(const Game& other) = delete;
+        Game(Game&& other) = delete;
+        Game& operator=(Game&& other) = delete;
 
         void start();                 
         bool isStarted() const;      
         bool isOver() const; 
         int getStartPlayerCount() const;
         void createPlayerRandomRole(const std::string& name);
+        Player& getPlayerByName(const std::string& name);
+        const std::vector<Player*>& getPlayers() const;
 
         const std::string& getLastArrested() const;
         void setLastArrested(const std::string& name);

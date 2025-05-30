@@ -1,0 +1,25 @@
+{
+    "configurations": [
+      {
+        "name": "Linux",
+        "includePath": [
+          "${workspaceFolder}/**",
+          "/usr/include",
+          "/usr/include/SFML"          // <— ajoutez ici
+        ],
+        "browse": {
+          "path": [
+            "${workspaceFolder}",
+            "/usr/include/SFML"         // <— et aussi ici pour l’indexation
+          ]
+        },
+        "defines": [],
+        "compilerPath": "/usr/bin/g++",
+        "cStandard": "c11",
+        "cppStandard": "c++17",
+        "intelliSenseMode": "linux-gcc-x64"
+      }
+    ],
+    "version": 4
+  }
+  

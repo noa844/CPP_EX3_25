@@ -12,13 +12,18 @@ using std::endl;
 
 namespace coup {
 
+    Game::~Game() {
+        for (Player* p : players) {
+            delete p;
+        }
+    }
+
     void Game::start() {
         if (players.size() < 2) {
             throw runtime_error("The game requires at least 2 players to start.");
         }
         started = true;
-       
-
+        std::cout << "Game: start" << std::endl;
     }
     
     bool Game::isStarted() const {
@@ -43,6 +48,19 @@ namespace coup {
         }
     
         Player* newPlayer = PlayerFactory::createPlayer(name, this); 
+        std::cout << "Game: create Player( name=\"" << name << "\" )" << std::endl;
+    }
+    
+    Player& Game::getPlayerByName(const std::string& name) {
+        for (auto* p : players) {
+            if (p->getName() == name) return *p;
+        }
+        throw std::runtime_error("No such player: " + name);
+    }
+    
+    const std::vector<Player*>& Game::getPlayers() const {
+        std::cout << "Entering Game::getPlayers()" << std::endl;
+        return players;
     }
     
 
@@ -92,7 +110,7 @@ namespace coup {
         if (Merchant* m = dynamic_cast<Merchant*>(next)) {
             m->startTurnBonus();
         }
-        
+        std::cout << "Game: next Turn" << std::endl; 
     }
 
     void Game::endTurn() {
@@ -122,6 +140,7 @@ namespace coup {
             }
         }
         actionHistory.push_back({playerName, action, type,roundCounter,targetName});
+
     }
     
     bool Game::hasRecentDeletableAction(const string& playerName, DeletableActionType type) const {
@@ -189,10 +208,12 @@ namespace coup {
     void Game::eliminate(Player& target) {
         target.eliminate();
         erasePlayerAction(target.getName());
-        
+        std::cout << "Game: eliminate( target=" << target.getName() << " )" << std::endl;
     }
     void Game::revive(Player& victim){
         victim.revive();
+        std::cout << "Game: revive( victim=" << victim.getName() << " )" << std::endl;
+
     }
 
 }

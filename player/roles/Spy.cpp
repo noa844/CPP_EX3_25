@@ -3,8 +3,8 @@
 
 namespace coup {
 
-    Spy::Spy(const std::string& name, Game* game)
-        : Player(name, game) {}
+    Spy::Spy(const std::string& name, Game* game, RoleType role)
+    : Player(name, game, role) {}
 
     int Spy::peekCoinsCount(const Player& target) const {
         checkGameIsActive();

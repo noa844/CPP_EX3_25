@@ -2,6 +2,7 @@
 #include <string>
 #include <unordered_map>
 #include "Status.hpp"
+#include "RoleType.hpp"
 
 namespace coup {
     class Game;
@@ -17,11 +18,12 @@ namespace coup {
         int coinsCount = 0;
         bool active = true; // Indicates whether the player is still in the game
         std::unordered_map<Status, bool> statusMap;
+        RoleType roleType = RoleType::None;
 
     
     public:
         //constructor
-        Player(const std::string& name, Game* game);
+        Player(const std::string& name, Game* game, RoleType roleType);
 
         //destructor
         virtual ~Player();
@@ -33,6 +35,8 @@ namespace coup {
         bool hasEnoughCoins(int amount) const;
 
         std::string getName() const;
+        RoleType getRoleType() const;
+        std::string getRoleName() const; 
 
         bool isActive() const;             // Check if the player is still active
         void eliminate();                  // Mark the player as eliminated

@@ -18,12 +18,12 @@ using std::endl;
 
 namespace coup {
 
-    Player::Player(const string& name, Game* game) : name(name),game(game), coinsCount(0),active(true) {
+    Player::Player(const string& name, Game* game, RoleType roleType) : name(name),game(game), coinsCount(0),active(true),roleType(roleType) {
         initializeStatusMap();
         game->addPlayer(this);
     }
 
-    Player::~Player() {delete game;}
+    Player::~Player()= default;
 
 
     void Player::receiveCoins(int amount) {
@@ -50,6 +50,14 @@ namespace coup {
 
     string Player::getName() const {
         return name;
+    }
+
+    RoleType Player::getRoleType() const {
+        return roleType;
+    }
+    
+    std::string Player::getRoleName() const {
+        return to_string(roleType);
     }
 
     bool Player::isActive() const {

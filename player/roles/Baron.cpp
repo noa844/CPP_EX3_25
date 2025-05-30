@@ -1,11 +1,12 @@
 #include "Baron.hpp"
 #include "../game_logic/Game.hpp"
 #include <stdexcept>
+#include "RoleType.hpp"
 
 namespace coup {
 
-    Baron::Baron(const std::string& name, Game* game)
-        : Player(name, game) {}
+    Baron::Baron(const std::string& name, Game* game, RoleType role)
+        : Player(name, game, role) {}
 
     void Baron::invest() {
         checkGameIsActive();

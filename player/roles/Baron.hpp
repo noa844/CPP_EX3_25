@@ -1,5 +1,6 @@
 #pragma once
 #include "../player/Player.hpp"
+#include "../player/RoleType.hpp"
 
 namespace coup {
 

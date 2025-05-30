@@ -1,39 +1,37 @@
-
 #pragma once
-#include <QMainWindow>
-#include <QListWidget>
-#include <QPushButton>
-#include <QVBoxLayout>
-#include <QHBoxLayout>
-#include <QLabel>
-#include "../game_logic/Game.hpp"
+
+#include <SFML/Graphics.hpp>
+#include <vector>
+#include <string>
+#include "../game_logic/Game.hpp" 
 #include "../player/Player.hpp"
 
 namespace coup {
 
-class GameGUI : public QMainWindow {
-    Q_OBJECT
-public:
-    GameGUI(Game* game, QWidget* parent = nullptr);
+    class GameGui {
+    private:
+        Game& game; // référence à ton moteur de jeu
+        sf::Font font;
+        std::string currentName;
+        std::vector<Player*> guiPlayers;
+        bool gameStarted = false;
+        size_t currentPlayerIndex = 0;
 
-private slots:
-    void onGather();
-    void onTax();
-    void onBribe();
-    void onArrest();
-    void onSanction();
-    void onCoup();
-    void updateUI();
+        // composants graphiques
+        sf::RenderWindow window;
+        sf::Text inputText;
+        sf::Text instruction;
+        sf::RectangleShape startButton;
+        sf::Text startText;
 
-private:
-    coup::Game* game;
-    QListWidget* playerList;
-    QLabel* currentLabel;
-    QPushButton* btnGather;
-    QPushButton* btnTax;
-    QPushButton* btnBribe;
-    QPushButton* btnArrest;
-    QPushButton* btnSanction;
-    QPushButton* btnCoup;
-};
+        void setupGUI();
+        void handleEvents();
+        void render();
+        void displayGameState();
+
+    public:
+        GameGui(Game& game);
+        void run();
+    };
+
 }

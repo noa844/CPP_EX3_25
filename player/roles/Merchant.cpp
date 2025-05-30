@@ -6,8 +6,8 @@ using namespace std;
 
 namespace coup {
 
-    Merchant::Merchant(const std::string& name, Game* game)
-        : Player(name, game) {}
+    Merchant::Merchant(const std::string& name, Game* game ,RoleType role)
+    : Player(name, game, role) {}
 
     void Merchant::startTurnBonus() {
         if (getCoinsCount() >= 3) {
