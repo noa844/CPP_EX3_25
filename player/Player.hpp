@@ -3,6 +3,10 @@
 #include <unordered_map>
 #include "Status.hpp"
 #include "RoleType.hpp"
+#include "SpecialActionUtils.hpp"
+#include "../lib/magic_enum.hpp"
+
+
 
 namespace coup {
     class Game;
@@ -44,11 +48,21 @@ namespace coup {
         
         void initializeStatusMap();
         void setStatus(Status s, bool value);
-        bool isStatusActive(Status s);
+        bool isStatusActive(Status s) const;
         void resetStatuses(); 
+        void resetCoinsCount();
 
         void checkGameIsActive() const;
         void checkPlayerTurn()const;
+
+        bool mustPerformCoup() const;
+        bool lastActionIsBribe() const;
+        bool hasEnoughCoinForCoup(int coins) const;
+
+        virtual std::vector<SpecialActionInfo> getSpecialActions();
+
+        virtual void executeSpecialAction(AllSpecialActionType action, Player* target = nullptr);
+
 
         // Game actions (can be overridden in subclasses)
         void gather();             // Take 1 coin from the bank

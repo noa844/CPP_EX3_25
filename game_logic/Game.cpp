@@ -3,6 +3,7 @@
 #include "../player/roles/Merchant.hpp"
 #include "../lib/magic_enum.hpp"
 #include "../player/PlayerFactory.hpp"
+#include "ActionType.hpp"
 #include <stdexcept>
 #include <iostream>
 
@@ -59,7 +60,6 @@ namespace coup {
     }
     
     const std::vector<Player*>& Game::getPlayers() const {
-        std::cout << "Entering Game::getPlayers()" << std::endl;
         return players;
     }
     
@@ -90,6 +90,10 @@ namespace coup {
 
     Player& Game::currentPlayer() const {
         return *players[currentTurnIndex];
+    }
+
+    size_t Game::getCurrentPlayerIndex() const{
+        return currentTurnIndex;
     }
 
     bool Game::isPlayerTurn(const Player* player)const{
@@ -140,8 +144,17 @@ namespace coup {
             }
         }
         actionHistory.push_back({playerName, action, type,roundCounter,targetName});
+        std::cout << "[Action]: "
+        << playerName
+        << " performed " << toString(action)
+        << " at round " << roundCounter;
 
-    }
+        if (targetName != "") {
+        std::cout << " on " << targetName;
+        }
+
+        std::cout << std::endl;
+            }
     
     bool Game::hasRecentDeletableAction(const string& playerName, DeletableActionType type) const {
         for (const auto& action : actionHistory) {
@@ -182,7 +195,13 @@ namespace coup {
             }
         }
         return false;
-    }    
+    }  
+    
+    bool Game::requiresTarget(ActionType action) {
+        return action == ActionType::Coup || 
+               action == ActionType::Arrest || 
+               action == ActionType::Sanction;
+    }
     
     size_t Game::getRoundCounter() const {
         return roundCounter;
@@ -207,6 +226,7 @@ namespace coup {
 
     void Game::eliminate(Player& target) {
         target.eliminate();
+        target.resetCoinsCount();
         erasePlayerAction(target.getName());
         std::cout << "Game: eliminate( target=" << target.getName() << " )" << std::endl;
     }

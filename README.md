@@ -2,6 +2,8 @@ mes regles:
 
 mon jeux demarre seulmeut apres start
 
+des que jai 10 point ou plus je suis obliger de fair coup. meme pas bribe.
+
 je fait arrest a qq seulment si la derniere fois dans le jeux entier arrest na pas etait effectuer sur lui.
 
 si on fait arrest sur marchant est il a pas 2 pice il en perd que une

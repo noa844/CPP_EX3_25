@@ -59,6 +59,7 @@ namespace coup {
 
         void addPlayer(Player* player);            // Add a player with unique name
         Player& currentPlayer() const;             // Who plays now
+        size_t getCurrentPlayerIndex() const;
         bool isPlayerTurn(const Player* player) const;
 
         void nextTurn();                           // Advance turn
@@ -70,6 +71,7 @@ namespace coup {
         bool hasRecentDeletableAction(const std::string& playerName, DeletableActionType type) const;
         void removeRecentDeletableAction(const std::string& playerName, DeletableActionType type);
         void erasePlayerAction(const std::string& playerName);
+        bool requiresTarget(ActionType action);
 
         bool wasCoupedRecently(const std::string& name) const;
         size_t getRoundCounter() const;

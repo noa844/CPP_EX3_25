@@ -1,7 +1,10 @@
 #include "Baron.hpp"
+#include "../player/RoleType.hpp"
 #include "../game_logic/Game.hpp"
 #include <stdexcept>
-#include "RoleType.hpp"
+
+using namespace std;
+
 
 namespace coup {
 
@@ -18,5 +21,23 @@ namespace coup {
         loseCoins(3);
         receiveCoins(6);
 
+        game->endTurn();
+    }
+
+    std::vector<SpecialActionInfo> Baron::getSpecialActions() {
+        return {
+            {AllSpecialActionType::Invest, false, false}
+    
+        };
+    }
+
+    void Baron::executeSpecialAction(AllSpecialActionType action, Player* target) {
+        switch (action) {
+            case AllSpecialActionType::Invest:
+               invest();
+               break;
+            default:
+                throw runtime_error("Action not handled.");
+        }
     }
 }

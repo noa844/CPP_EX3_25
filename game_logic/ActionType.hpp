@@ -1,5 +1,5 @@
 #pragma once
-
+#include <string>
 namespace coup {
 
     enum class ActionType {
@@ -11,5 +11,7 @@ namespace coup {
         Coup,
         None
     };
+
+    std::string toString(ActionType action);    
 
 }

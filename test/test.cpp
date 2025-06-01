@@ -10,6 +10,8 @@
 #include "../player/roles/General.hpp"
 #include "../player/roles/Judge.hpp"
 #include "../player/roles/Merchant.hpp"
+#include "../player/RoleType.hpp"
+
 #include <stdexcept>
 using namespace coup;
 using coup::Game;
@@ -17,9 +19,9 @@ using coup::Game;
 
 TEST_CASE("Deque action history behavior") {
     Game game;
-    Player* a = new Player("A", &game);
-    Player* b = new Player("B", &game);
-    Player* c = new Player("C", &game);
+    Player* a = new Player("A", &game, RoleType::None);
+    Player* b = new Player("B", &game, RoleType::None);
+    Player* c = new Player("C", &game, RoleType::None);
 
 
     game.start();
@@ -54,13 +56,13 @@ TEST_CASE("Deque action history behavior") {
 TEST_CASE("Player(without role) and Game functionality with game start/end checks") {
     Game game1;
 
-    Player* alice = new Player("Alice", &game1);
+    Player* alice = new Player("Alice", &game1, RoleType::None);
    
     SUBCASE("Game must have at least two players to start") { 
         CHECK_THROWS_WITH(game1.start(), "The game requires at least 2 players to start.");
     }
 
-    Player* bob = new Player("Bob", &game1);
+    Player* bob = new Player("Bob", &game1, RoleType::None);
     game1.start();
     CHECK(game1.isStarted());
     CHECK(alice->getName() == "Alice");
@@ -84,7 +86,7 @@ TEST_CASE("Player(without role) and Game functionality with game start/end check
         game1.nextTurn();//skip Alice's turn.
         bob->receiveCoins(3);
         bob->sanction(*alice);
-        CHECK_THROWS_WITH(alice->gather(), "You are blocked to perform this action.");
+        CHECK_THROWS_WITH(alice->gather(), "You are blocked to perform gather.");
         //Alice can perform gather next turn;
         game1.nextTurn();//skip Alice's turn.
         game1.nextTurn();//skip Bob's turn.
@@ -120,6 +122,8 @@ TEST_CASE("Player(without role) and Game functionality with game start/end check
         //Arrest fails if target was arrested last turn
         game1.nextTurn();
         CHECK_THROWS_WITH(alice->arrest(*bob), "You cannot arrest the same player two turns in a row.");
+        CHECK_THROWS_WITH(alice->arrest(*alice), "You cannot arrest yourself or an inactive player.");
+
     }
 
    
@@ -146,6 +150,9 @@ TEST_CASE("Player(without role) and Game functionality with game start/end check
         bob->tax();
         bob->gather();
 
+        CHECK_THROWS_WITH(alice->sanction(*alice), "You cannot sanction yourself or an inactive player.");
+
+
         
     }
 
@@ -160,13 +167,22 @@ TEST_CASE("Player(without role) and Game functionality with game start/end check
         CHECK_THROWS_WITH(alice->coup(*bob), "You don't have enough coins to perform a coup.");
     }
 
+    SUBCASE("Player have to perform coup") {
+        alice->receiveCoins(10);
+        CHECK_THROWS_WITH(alice->tax(),"You have to perform coup instead of this action.");
+        CHECK_THROWS_WITH(alice->gather(),"You have to perform coup instead of this action.");
+        CHECK_THROWS_WITH(alice->bribe(),"You have to perform coup instead of this action.");
+        CHECK_THROWS_WITH(alice->arrest(*bob),"You have to perform coup instead of this action.");
+        CHECK_THROWS_WITH(alice->sanction(*bob),"You have to perform coup instead of this action.");
+        alice->coup(*bob);
+    }
 }
 
 
 
     TEST_CASE("All statuses are initialized to false") {
         Game game;
-        Player* p = new Player("Test", &game);
+        Player* p = new Player("Test", &game, RoleType::None);
 
         for (Status s : magic_enum::enum_values<Status>()) {
             CHECK(p->isStatusActive(s) == false);
@@ -178,8 +194,8 @@ TEST_CASE("Player(without role) and Game functionality with game start/end check
     TEST_CASE("Test Governor behavior") {
         coup::Game game2;
     
-        Governor* gov = new Governor("Governor", &game2);
-        Player* bob = new Player("Bob", &game2);
+        Governor* gov = new Governor("Governor", &game2, RoleType::Governor);
+        Player* bob = new Player("Bob", &game2, RoleType::None);
     
         game2.start();
     
@@ -205,8 +221,8 @@ TEST_CASE("Player(without role) and Game functionality with game start/end check
     TEST_CASE("Test Spy behavior") {
         coup::Game game3;
     
-        Spy* spy = new Spy("Spy", &game3);
-        Player* bob = new Player("Bob", &game3);
+        Spy* spy = new Spy("Spy", &game3, RoleType::Spy);
+        Player* bob = new Player("Bob", &game3, RoleType::None);
     
         game3.start();
     
@@ -230,8 +246,8 @@ TEST_CASE("Player(without role) and Game functionality with game start/end check
         TEST_CASE("Test Baron behavior") {
             coup::Game game4;
         
-            Baron* baron = new Baron("Baron", &game4);
-            Player* bob = new Player("Bob", &game4);
+            Baron* baron = new Baron("Baron", &game4, RoleType::Baron);
+            Player* bob = new Player("Bob", &game4, RoleType::None);
         
             game4.start();
         
@@ -261,9 +277,9 @@ TEST_CASE("Player(without role) and Game functionality with game start/end check
     TEST_CASE("Test General behavior") {
         Game game5;
         
-        Player* alice = new Player("Alice", &game5);
-        Player* bob = new Player("Bob", &game5);
-        General* general = new General("General", &game5);
+        Player* alice = new Player("Alice", &game5, RoleType::None);
+        Player* bob = new Player("Bob", &game5, RoleType::None);
+        General* general = new General("General", &game5, RoleType::General);
 
         game5.start();
 
@@ -291,7 +307,7 @@ TEST_CASE("Player(without role) and Game functionality with game start/end check
 
         }
         SUBCASE("General blocks a recent coup not immediately"){
-            Player* clara = new Player("Clara", &game5);
+            Player* clara = new Player("Clara", &game5, RoleType::None);
             //round 1
             game5.nextTurn();//skip alice
             game5.nextTurn();//skip bob
@@ -334,10 +350,10 @@ TEST_CASE("Player(without role) and Game functionality with game start/end check
 
     TEST_CASE("Test Judge behavior") {
         Game game6;
-        Player* actor = new Player("Actor", &game6);
-        Player* normal = new Player("Normal", &game6);
-        Baron* baron = new Baron("Baron", &game6);
-        Judge* judge = new Judge("Judge", &game6);
+        Player* actor = new Player("Actor", &game6, RoleType::None);
+        Player* normal = new Player("Normal", &game6, RoleType::None);
+        Baron* baron = new Baron("Baron", &game6, RoleType::Baron);
+        Judge* judge = new Judge("Judge", &game6, RoleType::Judge);
     
         game6.start();
     
@@ -392,8 +408,8 @@ TEST_CASE("Player(without role) and Game functionality with game start/end check
     TEST_CASE("Test Merchant behavior") {
         Game game6;
 
-        Player* normal = new Player("Normal", &game6);
-        Merchant* merchant = new Merchant("Merchant", &game6);
+        Player* normal = new Player("Normal", &game6, RoleType::None);
+        Merchant* merchant = new Merchant("Merchant", &game6, RoleType::Merchant);
 
 
         game6.start();
@@ -441,6 +457,7 @@ TEST_CASE("Player(without role) and Game functionality with game start/end check
         SUBCASE("Merchant loses 0 if has 0") {
             CHECK_THROWS_WITH(normal->arrest(*merchant);,"The target does not have enough coins.");
             CHECK(normal->getCoinsCount() == 0);
+            
         }
     }
 
