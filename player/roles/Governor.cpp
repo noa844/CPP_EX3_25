@@ -36,7 +36,7 @@ namespace coup {
         target.loseCoins(2);
         game->removeRecentDeletableAction(target.getName(), DeletableActionType::Tax);
     
-        game->endTurn();
+       
     }
 
     std::vector<SpecialActionInfo> Governor::getSpecialActions() {

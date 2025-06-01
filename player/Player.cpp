@@ -73,6 +73,7 @@ namespace coup {
 
     void Player::revive() {
         active = true;
+        
     }
 
     void Player::initializeStatusMap(){

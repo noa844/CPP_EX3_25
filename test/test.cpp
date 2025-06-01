@@ -121,6 +121,7 @@ TEST_CASE("Player(without role) and Game functionality with game start/end check
         CHECK(game1.getLastArrested() == bob->getName());
         //Arrest fails if target was arrested last turn
         game1.nextTurn();
+        bob->receiveCoins(4);
         CHECK_THROWS_WITH(alice->arrest(*bob), "You cannot arrest the same player two turns in a row.");
         CHECK_THROWS_WITH(alice->arrest(*alice), "You cannot arrest yourself or an inactive player.");
 
@@ -149,7 +150,7 @@ TEST_CASE("Player(without role) and Game functionality with game start/end check
         bob->bribe();
         bob->tax();
         bob->gather();
-
+        alice->receiveCoins(4);
         CHECK_THROWS_WITH(alice->sanction(*alice), "You cannot sanction yourself or an inactive player.");
 
 
@@ -291,8 +292,9 @@ TEST_CASE("Player(without role) and Game functionality with game start/end check
 
             // General gets 5 coins to be able to block the coup
             general->receiveCoins(5);
-            general->blockCoup(*bob);
+            general->deleteCoup(*bob);
             CHECK(bob->isActive());       // Bob is revived
+            CHECK(bob->getCoinsCount() == 0);
             CHECK(general->getCoinsCount() == 0);  // General paid 5
             CHECK(alice->getCoinsCount() == 0);  // alice lose 7
             general->tax();
@@ -319,8 +321,9 @@ TEST_CASE("Player(without role) and Game functionality with game start/end check
             game5.nextTurn();//skip bob
             // General gets 5 coins to be able to block the coup
             general->receiveCoins(5);
-            general->blockCoup(*alice);
+            general->deleteCoup(*alice);
             CHECK(alice->isActive());
+            CHECK(alice->getCoinsCount() == 0);
             game5.nextTurn();//skip general
             game5.nextTurn();//skip clara
             //round 3
@@ -338,7 +341,7 @@ TEST_CASE("Player(without role) and Game functionality with game start/end check
             //round 2
             alice->tax(); 
             general->receiveCoins(5);
-            CHECK_THROWS_WITH(general->blockCoup(*bob), "No recent coup on this player to block.");
+            CHECK_THROWS_WITH(general->deleteCoup(*bob), "No recent coup on this player to block.");
         }
         SUBCASE("General arrested get his coin back") {
             general->receiveCoins(1);

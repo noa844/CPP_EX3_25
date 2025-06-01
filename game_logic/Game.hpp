@@ -28,7 +28,7 @@ namespace coup {
         size_t currentTurnIndex = 0;
         size_t roundCounter = 0;
         bool started = false;
-        std::string lastArrested;
+        std::string lastArrested = "";
         std::deque<Action> actionHistory;
         std::vector<std::string> activePlayersList;
         int playersAddedCount = 0;
@@ -49,6 +49,7 @@ namespace coup {
         void start();                 
         bool isStarted() const;      
         bool isOver() const; 
+        void restart(); 
         int getStartPlayerCount() const;
         void createPlayerRandomRole(const std::string& name);
         Player& getPlayerByName(const std::string& name);

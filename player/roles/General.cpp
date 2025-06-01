@@ -2,6 +2,7 @@
 #include "../game_logic/Game.hpp"
 #include "../player/RoleType.hpp"
 #include <stdexcept>
+#include <iostream>
 
 using namespace std;
 
@@ -11,6 +12,7 @@ namespace coup {
     : Player(name, game, role) {}
 
     void General::deleteCoup(Player& victim) {
+        std::cout<<"delete coup"<<std::endl;
         checkGameIsActive();
 
         if (!hasEnoughCoins(5)) {
@@ -24,6 +26,8 @@ namespace coup {
 
         loseCoins(5); 
         game->revive(victim);
+       
+
     }
 
     std::vector<SpecialActionInfo> General::getSpecialActions() {
@@ -38,7 +42,10 @@ namespace coup {
 
         switch (action) {
             case AllSpecialActionType::Delete_coup:
+                            
                deleteCoup(*target);
+               std::cout << "Executing special action: " << magic_enum::enum_name(action) << std::endl;
+
                break;
             default:
                 throw runtime_error("Action not handled.");

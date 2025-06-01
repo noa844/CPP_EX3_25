@@ -1,4 +1,5 @@
 #include "GameGui.hpp"
+
 #include "../player/PlayerFactory.hpp" 
 #include "../lib/magic_enum.hpp"
 #include <iostream>
@@ -8,35 +9,81 @@ using namespace std;
 
 namespace coup {
 
-    GameGui::GameGui(Game& game) : game(game), window(VideoMode(800, 700), "Coup - Game") {
+    GameGui::GameGui(Game& game) : game(game), window(VideoMode(900, 800), "Coup - Game") {
         if (!font.loadFromFile("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf")) {
             cerr << "Cannot load font!" << endl;
         }
+                // === Chargement du fond pour le menu ===
+        if (!menuBackgroundTexture.loadFromFile("assets/menu.png")) {
+            std::cerr << "Failed to load menu background image!" << std::endl;
+        }
+        menuBackgroundSprite.setTexture(menuBackgroundTexture);
+        menuBackgroundSprite.setScale(
+            900.f / menuBackgroundTexture.getSize().x,
+            800.f / menuBackgroundTexture.getSize().y
+        );
+      
+        // === Chargement du fond pour le jeu ===
+        if (!gameBackgroundTexture.loadFromFile("assets/game.png")) {
+            std::cerr << "Failed to load game background image!" << std::endl;
+        }
+        gameBackgroundSprite.setTexture(gameBackgroundTexture);
+        gameBackgroundSprite.setScale(
+            900.f / gameBackgroundTexture.getSize().x,
+            800.f / gameBackgroundTexture.getSize().y
+        );
+       
         setupGUI();
     }
 
     void GameGui::setupGUI() {
+        float yInput = 155;
+        float xInput= 125;
+        //input
         inputText.setFont(font);
         inputText.setCharacterSize(20);
-        inputText.setPosition(20, 20);
+        inputText.setPosition(xInput, yInput);
         inputText.setFillColor(Color::White);
-
+        //input message
         instruction.setFont(font);
         instruction.setString("Enter name and press Enter. Press START to begin.");
         instruction.setCharacterSize(20);
-        instruction.setPosition(20, 50);
-        instruction.setFillColor(Color::Yellow);
+        instruction.setPosition(xInput, yInput + 30);
+        instruction.setFillColor(Color(128, 0, 0));
 
+        float yStart = 157;
+        float xStart = 680;
         startButton.setSize(Vector2f(100, 40));
-        startButton.setPosition(650, 20);
-        startButton.setFillColor(Color::Green);
-
+        startButton.setPosition(xStart, yStart);
+        startButton.setFillColor(Color(166, 123, 91));
         startText.setFont(font);
         startText.setString("START");
         startText.setCharacterSize(20);
-        startText.setPosition(660, 25);
+        startText.setPosition(xStart + 15, yStart + 5);
         startText.setFillColor(Color::Black);
         displayActionButtons();
+
+        // Bouton Restart (initialement caché jusqu'à la fin du jeu)
+        restartButton.setSize(sf::Vector2f(150, 40));
+        restartButton.setPosition(350, 495);
+        restartButton.setFillColor(sf::Color(112, 66, 20));
+        restartText.setFont(font);
+        restartText.setCharacterSize(20);
+        restartText.setString("NEW GAME");
+        restartText.setPosition(365, 500);
+        restartText.setFillColor(sf::Color::White);
+
+        // Bouton Quit (toujours visible)
+        float yQuit = 70;
+        float xQuit = 730;
+        quitButton.setSize(sf::Vector2f(80, 30));
+        quitButton.setPosition(xQuit, yQuit);
+        quitButton.setFillColor(sf::Color(107, 47, 25));  
+        quitText.setFont(font);
+        quitText.setCharacterSize(16);
+        quitText.setString("QUIT");
+        quitText.setPosition(xQuit + 19, yQuit + 3);
+        quitText.setFillColor(sf::Color::White);
 
     }
 
@@ -46,7 +93,7 @@ namespace coup {
         actionTypes.clear();
     
         float y = 180;
-        float x = 650;
+        float x = 700;
     
         for (auto action : magic_enum::enum_values<ActionType>()) {
             if (action == ActionType::None) continue; // on ignore l'action vide
@@ -57,7 +104,7 @@ namespace coup {
             // Créer le bouton
             sf::RectangleShape button(sf::Vector2f(120, 30));
             button.setPosition(x, y);
-            button.setFillColor(sf::Color(100, 100, 255));
+            button.setFillColor(sf::Color(128, 0, 0));
             actionButtons.push_back(button);
     
             // Créer le label
@@ -80,6 +127,15 @@ namespace coup {
             // CLOSE WINDOW
             if (event.type == sf::Event::Closed) {
                 window.close();
+            }
+            //QUIT BUTTON
+            if ( event.type == sf::Event::MouseButtonPressed) {
+                sf::Vector2i mouse = sf::Mouse::getPosition(window);
+                if (quitButton.getGlobalBounds().contains(mouse.x, mouse.y)) {
+                    window.close();  
+                    resetToStartState();
+
+                }
             }
     
             // NAMES GETTER
@@ -118,16 +174,20 @@ namespace coup {
                 }
             }            
     
-            // CLIC ACTION'S BUTTON
+            // CLIC ALL OTHER BUTTON
             if (game.isStarted() && event.type == sf::Event::MouseButtonPressed) {
                 sf::Vector2i mouse = sf::Mouse::getPosition(window);
+               
+                if (restartButton.getGlobalBounds().contains(mouse.x, mouse.y)) {
+                    resetToStartState();
+                }
                 for (size_t i = 0; i < actionButtons.size(); ++i) {
                     if (actionButtons[i].getGlobalBounds().contains(mouse.x, mouse.y)) {
                         selectedAction = actionTypes[i];
                         actionErrorMessage.clear();
                         infoMessage.clear(); 
 
-                        if (game.requiresTarget(selectedAction)) {
+                        if (!specialActionOwner && game.requiresTarget(selectedAction)) {
                             displayTargetSelection();
                         } else {
                             executeSelectedAction();
@@ -158,6 +218,19 @@ namespace coup {
                 for (auto& btn : specialActionButtons) {
                     if (btn.shape.getGlobalBounds().contains(mouse.x, mouse.y)) {
                         try {
+
+                            std::cout << "Special button clicked: "
+                            << magic_enum::enum_name(btn.actionType) << std::endl;
+      
+                            // TEST ICI ⬇
+                            if (btn.actionType == AllSpecialActionType::Delete_coup) {
+                                std::cout << "[DEBUG] Button is correctly set to Delete_coup" << std::endl;
+                            } else {
+                                std::cout << "[ERROR] Unexpected action: "
+                                            << magic_enum::enum_name(btn.actionType) << std::endl;
+                            }
+
+
                             Player& p = game.getPlayerByName(btn.playerName);
 
                             if (!p.isActive()) continue;
@@ -166,6 +239,7 @@ namespace coup {
                             std::vector<SpecialActionInfo> specials = p.getSpecialActions();
                             auto it = std::find_if(specials.begin(), specials.end(), [&](const SpecialActionInfo& info) {
                                 return info.name == btn.actionType;
+                                
                             });
 
                             if (it == specials.end()) {
@@ -185,6 +259,7 @@ namespace coup {
                             if (info.requiresTarget) {
                                 selectedSpecialAction = info; // Mémoriser pour plus tard
                                 specialActionOwner = &p;
+                                selectedAction = ActionType::None; 
                                 displayTargetSelection();     // Afficher les cibles
                                 actionErrorMessage = "Select a target for special action.";
                             } else {
@@ -205,8 +280,15 @@ namespace coup {
                             std::string targetName = targetLabels[i].getString().toAnsiString();
                             try {
                                 Player& target = game.getPlayerByName(targetName);
-                                specialActionOwner->executeSpecialAction(selectedSpecialAction.name, &target);
+                                                
+                                // 🔻 AJOUT ICI
+                                std::cout << "Target selected: " << target.getName() << std::endl;
+                                std::cout << "Selected special action (before execution): "
+                                        << magic_enum::enum_name(selectedSpecialAction.name) << std::endl;
+
+                              
                                 if (selectedSpecialAction.name == AllSpecialActionType::Peek_Coins) {
+                                    specialActionOwner->executeSpecialAction(selectedSpecialAction.name, &target);
                                     int coins = target.getCoinsCount();
                                     infoMessage = target.getName() + " has " + std::to_string(coins) + " coins.";
                                 } else {
@@ -216,15 +298,15 @@ namespace coup {
                                 }
                                 clearTargetSelection();
                                 specialActionOwner = nullptr;
-                                actionErrorMessage.clear();
+                                
         
                             } catch (const std::exception& e) {
                                 actionErrorMessage = e.what();
                             }
-                            return;
+                            
                         }
                     }
-                    return;
+                    
                 }
 
                 
@@ -240,8 +322,8 @@ namespace coup {
     }
 
     void GameGui::displayGameState() {
-        float y = 150;
-        const float xText = 20;      // Position du nom du joueur
+        float y = 170;
+        const float xText = 75;      // Position du nom du joueur
     
         specialActionButtons.clear();  // On vide la liste avant d'en ajouter
     
@@ -276,6 +358,7 @@ namespace coup {
             for (size_t j = 0; j < actions.size(); ++j) {
                 SpecialActionButton btn;
                 btn.playerName = p->getName();
+                if(!p->isActive()){continue;}
                 btn.actionType = actions[j].name;
     
                 btn.shape.setSize(sf::Vector2f(100, 25));
@@ -345,70 +428,12 @@ namespace coup {
     }
     
 
-    void GameGui::render() {
-        window.clear();
-    
-        if (!game.isStarted()) {
-            // === Phase de saisie des noms avant début du jeu ===
-            inputText.setString("Name: " + currentName);
-            window.draw(inputText);
-            window.draw(instruction);
-            window.draw(startButton);
-            window.draw(startText);
-        } else {
-            // === Affichage du tour courant ===
-            sf::Text turnText("Current turn: " + game.currentPlayer().getName(), font, 24);
-            turnText.setPosition(20, 100);
-            turnText.setFillColor(sf::Color::Cyan);
-            window.draw(turnText);
-    
-            // === Affichage de tous les joueurs + leurs boutons spéciaux ===
-            displayGameState();
-    
-            // === Affichage des boutons d'action classiques ===
-            for (size_t i = 0; i < actionButtons.size(); ++i) {
-                window.draw(actionButtons[i]);
-                window.draw(actionLabels[i]);
-            }
-    
-            // === Affichage des boutons de sélection de cibles ===
-            for (size_t i = 0; i < targetButtons.size(); ++i) {
-                window.draw(targetButtons[i]);
-                window.draw(targetLabels[i]);
-            }
-    
-            // === Affichage des boutons spéciaux ===
-            for (const auto& btn : specialActionButtons) {
-                window.draw(btn.shape);
-                window.draw(btn.label);
-            }
-        }
-    
-        // === Affichage des messages d'erreur ===
-        if (!actionErrorMessage.empty()) {
-            sf::Text errText(actionErrorMessage, font, 18);
-            errText.setFillColor(sf::Color::Red);
-            errText.setPosition(20, 700);
-            window.draw(errText);
-        }
-
-        if (!infoMessage.empty()) {
-            sf::Text infoText(infoMessage, font, 18);
-            infoText.setFillColor(sf::Color(80, 200, 120)); // vert doux
-            infoText.setPosition(20, 750);
-            window.draw(infoText);
-        }
-    
-        window.display();
-    }
-    
-
     void GameGui::displayTargetSelection() {
         targetButtons.clear();
         targetLabels.clear();
     
         float y = 200;
-        const float x = 450;
+        const float x = 500;
         std::string currentName = game.currentPlayer().getName();
     
         activeNames = game.activePlayers();
@@ -429,6 +454,114 @@ namespace coup {
         }
     }
     
+    void GameGui::render() {
+        window.clear();
+    
+        if (game.isOver()) {
+            window.draw(gameBackgroundSprite);
+            renderEndScreen();
+        } else if (!game.isStarted()) {
+            window.draw(menuBackgroundSprite);
+            renderStartScreen();
+        } else {
+            window.draw(gameBackgroundSprite);
+            renderGameScreen();
+        }
+    
+        // Le bouton Quit est toujours visible
+        // Message d’erreur
+        if (!actionErrorMessage.empty()) {
+            sf::Text errText(actionErrorMessage, font, 18);
+            errText.setFillColor(sf::Color::Red);
+            errText.setPosition(75, 700);
+            window.draw(errText);
+        }
+        if (!infoMessage.empty()) {
+            sf::Text infoText(infoMessage, font, 18);
+            infoText.setFillColor(sf::Color(80, 200, 120)); 
+            infoText.setPosition(75, 600);
+            window.draw(infoText);
+        }
+
+        window.draw(quitButton);
+        window.draw(quitText);
+    
+        window.display();
+    }
+    
+    void GameGui::renderStartScreen() {
+        inputText.setString("Name: " + currentName);
+        window.draw(inputText);
+        window.draw(instruction);
+        window.draw(startButton);
+        window.draw(startText);
+        
+        
+    }
+
+    void GameGui::renderGameScreen() {
+        // Affichage du joueur courant
+        sf::Text turnText("Current turn: " + game.currentPlayer().getName(), font, 22);
+        turnText.setPosition(75, 120);
+        turnText.setFillColor(sf::Color(128, 0, 0));
+        window.draw(turnText);
+        
+    
+        // Affichage des joueurs et boutons spéciaux
+        displayGameState();
+    
+        // Boutons d’action de base
+        for (size_t i = 0; i < actionButtons.size(); ++i) {
+            window.draw(actionButtons[i]);
+            window.draw(actionLabels[i]);
+        }
+    
+        // Boutons de cible (si nécessaires)
+        for (size_t i = 0; i < targetButtons.size(); ++i) {
+            window.draw(targetButtons[i]);
+            window.draw(targetLabels[i]);
+        }
+    
+        // Boutons d’action spéciale
+        for (const auto& btn : specialActionButtons) {
+            window.draw(btn.shape);
+            window.draw(btn.label);
+        }
+    
+        
+    }
+
+    void GameGui::renderEndScreen() {
+        sf::Text winText;
+        winText.setFont(font);
+        winText.setCharacterSize(30);
+        winText.setFillColor(sf::Color(128, 0, 0));
+        winText.setString("Winner: " + game.winner());
+        winText.setPosition(300, 250);
+        window.draw(winText);
+       
+    
+        // Bouton Restart
+        window.draw(restartButton);
+        window.draw(restartText);
+    
+        // Le bouton Quit est déjà dessiné dans render()
+    }
+    
+    
+    void GameGui::resetToStartState() {
+        game.restart();  // on vide les données du jeu
+        guiPlayers.clear();
+        targetButtons.clear();
+        targetLabels.clear();
+        specialActionButtons.clear();
+        currentName.clear();
+        selectedAction = ActionType::None;
+        selectedSpecialAction = {};
+        specialActionOwner = nullptr;
+        infoMessage.clear();
+        actionErrorMessage.clear();
+    }
     
     
     GameGui::~GameGui() {

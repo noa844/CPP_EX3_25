@@ -36,8 +36,37 @@ namespace coup {
         for (Player* p : players) {
             if (p->isActive()) ++activeCount;
         }
-        return activeCount <= 1;
+        if(activeCount <=1 && isStarted()){
+            return true;
+        }else { 
+            return false;
+        }
+        
     }
+
+    void Game::restart() {
+        
+  
+        cout << "[LOG] Game::restart -> restarting the game from scratch." << endl;
+        
+        started = false;
+        
+        for (Player* p : players) {
+            delete p;
+        }
+        players.clear();
+        currentTurnIndex = 0;
+        roundCounter = 0;
+        lastArrested = "";    
+        actionHistory.clear();      
+        playersAddedCount = static_cast<int>(players.size());
+        activePlayersList.clear();
+
+       
+        cout << "[LOG] All players have been reset to 0 coins & active. "
+             << "Ready to start a new game." << endl;
+    }
+
 
     int Game::getStartPlayerCount() const {
         return playersAddedCount;
@@ -218,16 +247,19 @@ namespace coup {
     }
 
     string Game::winner() const {
-        if (players.size() != 1) {
+        if (!isOver()) {
             throw runtime_error("Game is still in progress");
+        }else{
+        vector<string> winner = activePlayers();
+        return winner.front();
         }
-        return players.front()->getName();
     }
 
     void Game::eliminate(Player& target) {
         target.eliminate();
         target.resetCoinsCount();
         erasePlayerAction(target.getName());
+        target.resetStatuses();
         std::cout << "Game: eliminate( target=" << target.getName() << " )" << std::endl;
     }
     void Game::revive(Player& victim){

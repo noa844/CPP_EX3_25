@@ -33,8 +33,13 @@ namespace coup {
         sf::Text instruction;
         sf::RectangleShape startButton;
         sf::Text startText;
-        sf::Texture backgroundTexture;
-        sf::Sprite backgroundSprite;
+
+        sf::Texture menuBackgroundTexture;
+        sf::Sprite menuBackgroundSprite;
+
+        sf::Texture gameBackgroundTexture;
+        sf::Sprite gameBackgroundSprite;
+
 
 
         std::vector<sf::RectangleShape> actionButtons;
@@ -52,17 +57,29 @@ namespace coup {
         coup::SpecialActionInfo selectedSpecialAction;
         coup::Player* specialActionOwner = nullptr;
 
+        sf::RectangleShape restartButton;
+        sf::Text restartText;
+
+        sf::RectangleShape quitButton;
+        sf::Text quitText;
 
 
         void setupGUI();
         void handleEvents();
         void executeSelectedAction();
         void executeSelectedAction(Player& target);
+
         void render();
+        void renderGameScreen();
+        void renderStartScreen();
+        void renderEndScreen();
+
         void displayGameState();
         void displayActionButtons();
         void displayTargetSelection();
         void clearTargetSelection();
+
+        void resetToStartState();
 
         
 
