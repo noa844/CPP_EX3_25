@@ -71,7 +71,7 @@ This project relies heavily on [`magic_enum`](https://github.com/Neargye/magic_e
 * Populating maps like `statusMap` without boilerplate.
 * Generating action names for debugging or GUI display.
 
-### ✅ Benefits:
+###  Benefits:
 
 * Avoid manually maintaining lists of all enum values like `Status` or `RoleType`. This ensures consistency and reduces boilerplate.
 
@@ -129,7 +129,7 @@ make demo
 
   * Select the corresponding button when it’s your turn.
 
-### 🔁 Restart
+###  Restart
 
 Click **Restart** to reset everything and return to the name entry screen.
 
