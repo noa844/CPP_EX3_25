@@ -61,7 +61,7 @@ The implementation is based on an interpreted version of Coup’s gameplay and t
 
 ---
 
-## 🪄 Why Use `magic_enum`?
+##  Why Use `magic_enum`?
 
 This project relies heavily on [`magic_enum`](https://github.com/Neargye/magic_enum), a modern C++17 header-only library that enables reflection over `enum class`.
 
@@ -93,12 +93,12 @@ This project relies heavily on [`magic_enum`](https://github.com/Neargye/magic_e
 make run
 ```
 
-2. **(Optional)**: Run with Valgrind to check memory usage:
+2. **(Optional)**: Run Gui with Valgrind to check memory usage:
 
 ```bash
 make valgrind
 ```
-3. **Compile and run Demo**: 
+3. **Compile and run Demo**: (also run with valgring)
 
 ```bash
 make demo
