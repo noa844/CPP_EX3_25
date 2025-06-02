@@ -114,7 +114,7 @@ make demo
 * Press **Enter** after each name.
 * Click **Start** to begin the game once all players are entered (minimum 2 players).
 
-### 🕹️ Game Interface
+###  Game Interface
 
 * Displays:
 
