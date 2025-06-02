@@ -1,8 +1,13 @@
 #include "Spy.hpp"
 #include "../player/Player.hpp"
+
 #include "../game_logic/Game.hpp"
 #include "../player/RoleType.hpp"
+
+#include "../player/SpecialActionUtils.hpp"
+#include <iostream>
 #include <stdexcept>
+
 
 using namespace std;
 
@@ -14,7 +19,9 @@ namespace coup {
 
     int Spy::peekCoinsCount(const Player& target) const {
         checkGameIsActive();
+        std::cout <<"coins: "<<target.getCoinsCount()<< std::endl;
         return target.getCoinsCount();
+       
     }
 
     void Spy::blockArrest(Player& target) {
@@ -42,6 +49,17 @@ namespace coup {
             default:
                 throw runtime_error("Action not handled.");
         }
+        std::cout << "[Action]: "
+        << this->getName()
+        << " performed " << toString(action);
+
+        if (target != nullptr) {
+        std::cout << " on " << target->getName();
+        }
+
+        std::cout << std::endl;
+            
     }
+
     
 }

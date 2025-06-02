@@ -14,13 +14,13 @@ using std::endl;
 namespace coup {
 
     Game::~Game() {
-        for (Player* p : players) {
+        for (Player* p : playersList) {
             delete p;
         }
     }
 
     void Game::start() {
-        if (players.size() < 2) {
+        if (playersList.size() < 2) {
             throw runtime_error("The game requires at least 2 players to start.");
         }
         started = true;
@@ -33,7 +33,7 @@ namespace coup {
     
     bool Game::isOver() const {
         int activeCount = 0;
-        for (Player* p : players) {
+        for (Player* p : playersList) {
             if (p->isActive()) ++activeCount;
         }
         if(activeCount <=1 && isStarted()){
@@ -51,15 +51,15 @@ namespace coup {
         
         started = false;
         
-        for (Player* p : players) {
+        for (Player* p : playersList) {
             delete p;
         }
-        players.clear();
+        playersList.clear();
         currentTurnIndex = 0;
         roundCounter = 0;
         lastArrested = "";    
         actionHistory.clear();      
-        playersAddedCount = static_cast<int>(players.size());
+        playersAddedCount = static_cast<int>(playersList.size());
         activePlayersList.clear();
 
        
@@ -82,14 +82,14 @@ namespace coup {
     }
     
     Player& Game::getPlayerByName(const std::string& name) {
-        for (auto* p : players) {
+        for (auto* p : playersList) {
             if (p->getName() == name) return *p;
         }
         throw std::runtime_error("No such player: " + name);
     }
     
     const std::vector<Player*>& Game::getPlayers() const {
-        return players;
+        return playersList;
     }
     
 
@@ -106,19 +106,19 @@ namespace coup {
             throw runtime_error("Maximum number of players reached.");
         }
         // Ensure unique name
-        for (Player* p : players) {
+        for (Player* p : playersList) {
             if (p->getName() == player->getName()) {
                 throw invalid_argument("Name already in use");
             }
         }
 
-        players.push_back(player);
+        playersList.push_back(player);
         ++playersAddedCount;
        
     }
 
     Player& Game::currentPlayer() const {
-        return *players[currentTurnIndex];
+        return *playersList[currentTurnIndex];
     }
 
     size_t Game::getCurrentPlayerIndex() const{
@@ -126,24 +126,24 @@ namespace coup {
     }
 
     bool Game::isPlayerTurn(const Player* player)const{
-        return players[currentTurnIndex] == player;
+        return playersList[currentTurnIndex] == player;
     }
 
     void Game::nextTurn() {
         currentPlayer().resetStatuses();
 
         do {
-            currentTurnIndex = (currentTurnIndex + 1) % players.size();
-        } while (!players[currentTurnIndex]->isActive());
+            currentTurnIndex = (currentTurnIndex + 1) % playersList.size();
+        } while (!playersList[currentTurnIndex]->isActive());
 
         if (currentTurnIndex == 0) {
             ++roundCounter;
         }
-        Player* next = players[currentTurnIndex];
+        Player* next = playersList[currentTurnIndex];
         if (Merchant* m = dynamic_cast<Merchant*>(next)) {
             m->startTurnBonus();
         }
-        std::cout << "Game: next Turn" << std::endl; 
+        std::cout << "Game: next Turn: " << next->getName() <<std::endl; 
     }
 
     void Game::endTurn() {
@@ -238,7 +238,7 @@ namespace coup {
 
     vector<string> Game::activePlayers() const {
         vector<string> result;
-        for (Player* p : players) {
+        for (Player* p : playersList) {
             if(p->isActive()){
             result.push_back(p->getName());
             }
@@ -267,5 +267,20 @@ namespace coup {
         std::cout << "Game: revive( victim=" << victim.getName() << " )" << std::endl;
 
     }
+    std::string Game::turn() const {
+        vector<string> activeNames;
+        activeNames = activePlayers();
+        if (activeNames.empty() || !started) {
+            throw std::runtime_error("Game has not started or there are no players.");
+        }
+        return currentPlayer().getName();
+    }
+    
+    vector<string> Game::players() const {
+        vector<string> activeNames;
+        activeNames = activePlayers();
+        return activeNames;
+    }
+    
 
 }

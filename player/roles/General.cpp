@@ -1,6 +1,9 @@
 #include "General.hpp"
 #include "../game_logic/Game.hpp"
 #include "../player/RoleType.hpp"
+
+#include "../player/SpecialActionUtils.hpp"
+
 #include <stdexcept>
 #include <iostream>
 
@@ -50,6 +53,15 @@ namespace coup {
             default:
                 throw runtime_error("Action not handled.");
         }
+        std::cout << "[Action]: "
+        << this->getName()
+        << " performed " << toString(action);
+
+        if (target != nullptr) {
+        std::cout << " on " << target->getName();
+        }
+
+        std::cout << std::endl;
     }
 }
 

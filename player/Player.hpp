@@ -41,10 +41,10 @@ class Player {
          */
         Player(const std::string& name, Game* game, RoleType roleType);
     
-        /**
-         * @brief Virtual destructor for cleanup in derived classes.
-         */
-        virtual ~Player();
+        // /**
+        //  * @brief Virtual destructor for cleanup in derived classes.
+        //  */
+         virtual ~Player();
     
         // === Coin operations ===
     

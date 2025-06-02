@@ -7,6 +7,8 @@
 #include "DeletableActionType.hpp"
 #include "../player/Player.hpp"
 #include "../player/PlayerFactory.hpp"
+#include "../player/SpecialActionUtils.hpp"
+
 
 namespace coup {
 
@@ -33,7 +35,7 @@ namespace coup {
      */
     class Game {
     private:
-        std::vector<Player*> players;           ///< List of players in the game.
+        std::vector<Player*> playersList;           ///< List of players in the game.
         size_t currentTurnIndex = 0;            ///< Index of the player whose turn it is.
         size_t roundCounter = 0;                ///< Number of full rounds completed.
         bool started = false;                   ///< Whether the game has been started.
@@ -201,6 +203,21 @@ namespace coup {
          * @param victim The player to bring back.
          */
         void revive(Player& victim);
+
+        /**
+         * @brief Gets the name of current player turn.
+         * @return Name of the current player.
+         * @throws std::runtime_error there no player or game not start yet.
+         */
+        std::string turn() const;
+
+        /**
+         * @brief Gets list of active players in game.
+         * @return Name of the current player.
+         */
+        std::vector<std::string> players() const;
+
+
     };
 
 }

@@ -1,4 +1,6 @@
 #include "Player.hpp"
+#include "RoleType.hpp"
+#include "SpecialActionUtils.hpp"
 #include "../game_logic/Game.hpp"
 #include "Status.hpp"
 #include "../lib/magic_enum.hpp"
@@ -26,7 +28,7 @@ namespace coup {
         game->addPlayer(this);
     }
 
-    Player::~Player(){ std::cout << "Destruct Player: " << name << std::endl;}
+    Player::~Player() = default;
 
 
     void Player::receiveCoins(int amount) {
@@ -145,6 +147,7 @@ namespace coup {
     } 
 
     void Player::executeSpecialAction(AllSpecialActionType, Player*) {
+
         throw std::runtime_error("Base Player cannot execute special actions.");
     }
     

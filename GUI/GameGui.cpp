@@ -322,7 +322,7 @@ namespace coup {
             if (!p->isActive()) {
                 txt.setFillColor(Color(128, 128, 128)); 
             } else if (i == game.getCurrentPlayerIndex()) {
-                txt.setFillColor(Color(193, 154, 107)); 
+                txt.setFillColor(Color::Black); 
             } else {
                 txt.setFillColor(Color::White);
             }
